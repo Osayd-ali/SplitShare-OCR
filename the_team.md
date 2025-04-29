@@ -1,0 +1,27 @@
+# The Team - SplitShare Project
+
+## Tamim Bayazeed
+- Role: Frontend Developer and Sprint Planner
+- About Me: Student at DePaul Pursuing Graduate Studies in Computer Science , Interested in AI/ML , Cloud Technolgies and Cyber Security.
+## [Member 2]
+- Role: 
+- About Me: 
+
+## [Member 3]
+- Role:
+- Aboud Me:
+
+## [Member 4]
+- Role:
+- About Me:
+
+## [Member 5]
+- Role:
+- About Me:
+
+# Definition of Done (DoD)
+- The feature is working as expected and tested at least once.
+- The code is committed and pushed to GitHub.
+- The UI or API response is usable and clean.
+- The feature is integrated and doesn’t break other parts of the app.
+- The story is marked complete on the GitHub Project board.
