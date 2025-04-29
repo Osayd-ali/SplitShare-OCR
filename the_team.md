@@ -3,9 +3,9 @@
 ## Tamim Bayazeed
 - Role: Frontend Developer and Sprint Planner
 - About Me: Student at DePaul Pursuing Graduate Studies in Computer Science , Interested in AI/ML , Cloud Technolgies and Cyber Security.
-## [Member 2]
-- Role: 
-- About Me: 
+## Alexander Lazarov
+- Role: Backend 
+- About Me: DePaul graduate student in Software Engineering. Enjoy researching technologies and trying different languages.
 
 ## [Member 3]
 - Role:
