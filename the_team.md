@@ -15,7 +15,7 @@
 - Role: Test Engineer
 - About Me: Depaul CS Graduate with an Experience of over 3 years, working as Test Engineer in Infosys. 
 
-##Mohammed Abdul Fatah
+## Mohammed Abdul Fatah
 - Role:Front End developer
 - About Me: DePaul student pursuing Master's in Computer Science , Areas of interest are Java Programming and Cloud Technologies.
 
