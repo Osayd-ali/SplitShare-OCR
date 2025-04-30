@@ -15,9 +15,9 @@
 - Role: Test Engineer
 - About Me: Depaul CS Graduate with an Experience of over 3 years, working as Test Engineer in Infosys. 
 
-## [Member 5]
-- Role:
-- About Me:
+##Mohammed Abdul Fatah
+- Role:Front End developer
+- About Me: DePaul student pursuing Master's in Computer Science , Areas of interest are Java Programming and Cloud Technologies.
 
 # Definition of Done (DoD)
 - The feature is working as expected and tested at least once.
