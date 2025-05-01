@@ -7,17 +7,17 @@
 - Role: Backend 
 - About Me: DePaul graduate student in Software Engineering. Enjoy researching technologies and trying different languages.
 
-## [Member 3]
-- Role:
-- Aboud Me:
+## Mir Osayd Ali
+- Role: Backend developer
+- About Me: Graduate Student at DePaul University with a major in Computer Science. I have strong passion towards Application Development and I am well experienced with Java Development and its Backend Frameworks. 
 
-## [Member 4]
-- Role:
-- About Me:
+## Meghashree Narasimhan
+- Role: Test Engineer
+- About Me: Depaul CS Graduate with an Experience of over 3 years, working as Test Engineer in Infosys. 
 
-## [Member 5]
-- Role:
-- About Me:
+## Mohammed Abdul Fatah
+- Role:Front End developer
+- About Me: DePaul student pursuing Master's in Computer Science , Areas of interest are Java Programming and Cloud Technologies.
 
 # Definition of Done (DoD)
 - The feature is working as expected and tested at least once.
