@@ -8,7 +8,7 @@
 		<version>3.4.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>491.splitshare</groupId>
+	<groupId>com.splitshare</groupId>
 	<artifactId>splitshare</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>splitshare</name>
