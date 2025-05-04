@@ -1,16 +1,10 @@
 package com.splitshare.splitshare.service;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import org.springframework.stereotype.Service;
 import net.sourceforge.tess4j.Tesseract;
-import java.awt.Graphics2D;
-import java.awt.Image;
+
 
 @Service
 public class ImageHandlingService {
