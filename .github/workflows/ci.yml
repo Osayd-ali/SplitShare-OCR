@@ -1,0 +1,30 @@
+name: CI Build and Test
+
+# on:
+#     push:
+#         branches:
+#             - main
+#     pull_request:
+on: [push, pull_request]
+jobs:
+    test:
+        name: Run Dockerfile Tests
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Build and test using Dockerfile.test
+          run: docker build -f Dockerfile.test -t splitshare-test .
+
+    build:
+        name: Build Dockerfile
+        runs-on: ubuntu-latest
+        needs: test
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Build Dockerfile
+          run: docker build -f Dockerfile -t production-image .
