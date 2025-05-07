@@ -1,11 +1,12 @@
 name: CI Build and Test
 
-# on:
-#     push:
-#         branches:
-#             - main
-#     pull_request:
-on: [push, pull_request]
+on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
 jobs:
     test:
         name: Run Dockerfile Tests
@@ -27,4 +28,4 @@ jobs:
           uses: actions/checkout@v4
 
         - name: Build Dockerfile
-          run: docker build -f Dockerfile -t production-image .
+          run: docker build -t splitshare:latest .
