@@ -3,6 +3,9 @@ package com.splitshare.splitshare.service;
 import net.sourceforge.tess4j.Tesseract;
 import java.awt.image.BufferedImage;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class OcrEngine {
     private Tesseract tesseract;
     public OcrEngine(){
