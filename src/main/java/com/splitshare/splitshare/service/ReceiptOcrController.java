@@ -10,6 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -47,6 +51,65 @@ public class ReceiptOcrController {
      * @param file The uploaded receipt image
      * @return Structured receipt data or an error message
      */
+
+    //this is the endpoint for passing the file name of a file that is already on the server
+    @PostMapping("/extract-from-server")
+    public ResponseEntity<?> extractReceiptData(
+            @RequestParam("fileName") String fileName,
+            @RequestParam("userId") Long userId) {
+        File file = null;
+        try {
+            // Load file from the server
+            Path filePath = Paths.get("uploads", fileName).toAbsolutePath();
+            file = filePath.toFile();
+
+            if (!file.exists()) {
+                logger.warn("File not found: {}", filePath);
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("The requested file does not exist on the server."));
+            }
+
+            // Convert to image
+            BufferedImage image = ImageIO.read(file);
+            if (image == null) {
+                logger.error("Failed to read image from saved file");
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Unable to process the saved image."));
+            }
+
+            // OCR & parsing logic stays the same
+            String rawText = ocrEngine.extractTextFromImage(image);
+            ReceiptData parsedData = parseReceiptText(rawText);
+            String receiptId = storageService.storeReceiptText(userId, rawText, parsedData, fileName);
+
+            // Build structured response
+            Map<String, Object> response = new HashMap<>();
+            response.put("receiptId", receiptId);
+            response.put("storeName", parsedData.getStoreName());
+            response.put("date", parsedData.getDate());
+            response.put("total", parsedData.getTotal());
+            response.put("items", parsedData.getItems());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            // Log the complete stack trace for technical debugging
+            logger.error("Error processing receipt image: ", e);
+            // Log the failure (but don't store the text since OCR failed)
+            storageService.logOcrFailure(
+                    userId,
+                    fileName,
+                    e.getMessage()
+            );
+            // Return a user-friendly error message
+            // The message suggests possible solutions to help the user resolve the issue
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("We couldn't process this receipt image. " +
+                            "Please ensure the image is clear and try again, or enter the details manually."));
+        }
+    }
+    
+    //this is the rest api for if use uploads file from their device
     @PostMapping("/extract")
     public ResponseEntity<?> extractReceiptData(
             @RequestParam("file") MultipartFile file,
@@ -172,7 +235,10 @@ public class ReceiptOcrController {
         for (int i = 0; i < Math.min(5, lines.length); i++) {
             String line = lines[i].trim();
             // Skip empty lines, date lines, or lines that just contain a price
-            if (!line.isEmpty() && !isDateLine(line) && !isPriceLine(line)) {
+            if (!line.isEmpty() && 
+            !isDateLine(line) && 
+            !isPriceLine(line) &&
+            !line.matches(".+\\$\\d+(\\.\\d{2})?")) { 
                 return line;
             }
         }
@@ -288,16 +354,19 @@ public class ReceiptOcrController {
         // Skip the header and footer lines
         // Items are typically in the middle section of a receipt
         // This is a heuristic approach - real receipts vary greatly
-        int startLine = Math.min(5, lines.length / 4);
-        int endLine = Math.max(lines.length - 5, lines.length * 3 / 4);
+        // int startLine = Math.min(5, lines.length / 4);
+        // int endLine = Math.max(lines.length - 5, lines.length * 3 / 4);
 
-        for (int i = startLine; i < endLine; i++) {
-            String line = lines[i].trim();
-
+        // for (int i = startLine; i < endLine; i++) {
+        //     String line = lines[i].trim();
+        for (String line : lines) {
+            line.trim();
             // Skip lines that are likely not items
             // This includes empty lines, subtotal/total lines, and date lines
-            if (line.isEmpty() || line.toLowerCase().contains("subtotal") ||
-                    line.toLowerCase().contains("total") || isDateLine(line)) {
+            if (line.isEmpty() || 
+                line.toLowerCase().contains("subtotal") ||
+                line.toLowerCase().contains("total") || 
+                isDateLine(line)) {
                 continue;
             }
 
