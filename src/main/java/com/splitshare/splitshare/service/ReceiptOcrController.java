@@ -172,7 +172,10 @@ public class ReceiptOcrController {
         for (int i = 0; i < Math.min(5, lines.length); i++) {
             String line = lines[i].trim();
             // Skip empty lines, date lines, or lines that just contain a price
-            if (!line.isEmpty() && !isDateLine(line) && !isPriceLine(line)) {
+            if (!line.isEmpty() && 
+            !isDateLine(line) && 
+            !isPriceLine(line) &&
+            !line.matches(".+\\$\\d+(\\.\\d{2})?")) { 
                 return line;
             }
         }
@@ -288,16 +291,19 @@ public class ReceiptOcrController {
         // Skip the header and footer lines
         // Items are typically in the middle section of a receipt
         // This is a heuristic approach - real receipts vary greatly
-        int startLine = Math.min(5, lines.length / 4);
-        int endLine = Math.max(lines.length - 5, lines.length * 3 / 4);
+        // int startLine = Math.min(5, lines.length / 4);
+        // int endLine = Math.max(lines.length - 5, lines.length * 3 / 4);
 
-        for (int i = startLine; i < endLine; i++) {
-            String line = lines[i].trim();
-
+        // for (int i = startLine; i < endLine; i++) {
+        //     String line = lines[i].trim();
+        for (String line : lines) {
+            line.trim();
             // Skip lines that are likely not items
             // This includes empty lines, subtotal/total lines, and date lines
-            if (line.isEmpty() || line.toLowerCase().contains("subtotal") ||
-                    line.toLowerCase().contains("total") || isDateLine(line)) {
+            if (line.isEmpty() || 
+                line.toLowerCase().contains("subtotal") ||
+                line.toLowerCase().contains("total") || 
+                isDateLine(line)) {
                 continue;
             }
 
