@@ -87,7 +87,7 @@ public class ReceiptOcrController {
             }
 
             // OCR & parsing logic stays the same
-            String rawText = ocrEngine.extractTextFromImage(image);
+            String rawText = imageHandlingService.handleImage(file.getAbsolutePath());
             ReceiptData parsedData = parseReceiptText(rawText);
             String receiptId = storageService.storeReceiptText(userId, rawText, parsedData, fileName);
 
@@ -146,7 +146,7 @@ public class ReceiptOcrController {
             File tempFile = File.createTempFile("receipt-", ".png");
             file.transferTo(tempFile);
             String rawText = imageHandlingService.handleImage(tempFile.getAbsolutePath());
-            System.out.println("OCR Text:\n" + rawText);
+            // System.out.println("OCR Text:\n" + rawText);
             tempFile.delete();
             // String rawText = ocrEngine.extractTextFromImage(image);
             // After extracting raw text, parse it into structured data
