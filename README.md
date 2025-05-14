@@ -2,8 +2,6 @@
 
 SplitShare is a web application that revolutionizes how friends split expenses by using advanced OCR technology to scan receipts, automatically identify items, and intelligently allocate costs. Our solution eliminates the headache of manual calculations, prevents financial disputes, and makes group activities more enjoyable.
 
-![Image](Screenshot 2025-05-14 at 1.35.27 AM.png)
-
 # Core Features
 * **Intelligent Receipt Scanning:** Advanced OCR technology extracts itemized expenses from receipts
 * **Smart Item Assignment:** Intuitive interface to assign items to specific group members
