@@ -11,14 +11,16 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre AS runtime
+USER root
 
 # Install Tesseract and wget using apk
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     tesseract-ocr \
-    tesseract-ocr-data-eng \
-    wget && \ 
-    mkdir -p /usr/share/tessdata && \
+    tesseract-ocr-eng \
+    wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*  && \
     wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata -P /usr/share/tessdata && \
     wget https://github.com/tesseract-ocr/tessdata/raw/main/osd.traineddata -P /usr/share/tessdata
 

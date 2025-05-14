@@ -31,7 +31,7 @@ public class ImageQualityChecker {
     
     public static boolean isBlurry(String imagePath) {
         double variance = computeVariance(imagePath);
-        // System.out.printf("Image blur score (variance): %.2f\n", variance);
+        System.out.printf("Image blur score (variance): %.2f\n", variance);
         return variance < THRESHHOLD;
     }
 }
