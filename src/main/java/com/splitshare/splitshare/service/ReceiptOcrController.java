@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -36,13 +38,20 @@ public class ReceiptOcrController {
     // The OCR engine used to extract text from images
     private final OcrEngine ocrEngine;
     private final ReceiptStorageService storageService;
+    private final ImageHandlingService imageHandlingService;
+    // Pattern 1: Qty + Item Name + Price
+    private final static String QTY_NAME_PRICE = "(?i)(\\d+)\\s+([A-Za-z &]+?)\\s+\\$?([0-9]{1,3}\\.\\d{2})\\b";
+
+    // Pattern 2: Just Item Name + Price
+    private final static String NAME_PRICE = "(?i)([A-Za-z &]+?)\\s+\\$?([0-9]{1,3}\\.\\d{2})\\b";
     /**
      * Constructor that injects the OCR engine dependency
      */
     @Autowired
-    public ReceiptOcrController(OcrEngine ocrEngine, ReceiptStorageService storageService) {
+    public ReceiptOcrController(OcrEngine ocrEngine, ReceiptStorageService storageService, ImageHandlingService imageHandlingService) {
         this.ocrEngine = ocrEngine;
         this.storageService = storageService;
+        this.imageHandlingService = imageHandlingService;
     }
     /**
      * API endpoint for extracting data from receipt images.
@@ -78,7 +87,7 @@ public class ReceiptOcrController {
             }
 
             // OCR & parsing logic stays the same
-            String rawText = ocrEngine.extractTextFromImage(image);
+            String rawText = imageHandlingService.handleImage(file.getAbsolutePath());
             ReceiptData parsedData = parseReceiptText(rawText);
             String receiptId = storageService.storeReceiptText(userId, rawText, parsedData, fileName);
 
@@ -134,8 +143,12 @@ public class ReceiptOcrController {
 
             // Use the OCR engine to extract raw text from the image
             // This calls the provided OcrEngine.extractTextFromImage() method
-            String rawText = ocrEngine.extractTextFromImage(image);
-
+            File tempFile = File.createTempFile("receipt-", ".png");
+            file.transferTo(tempFile);
+            String rawText = imageHandlingService.handleImage(tempFile.getAbsolutePath());
+            // System.out.println("OCR Text:\n" + rawText);
+            tempFile.delete();
+            // String rawText = ocrEngine.extractTextFromImage(image);
             // After extracting raw text, parse it into structured data
             // This includes store name, date, total, and individual items
             ReceiptData parsedData = parseReceiptText(rawText);
@@ -235,10 +248,11 @@ public class ReceiptOcrController {
         for (int i = 0; i < Math.min(5, lines.length); i++) {
             String line = lines[i].trim();
             // Skip empty lines, date lines, or lines that just contain a price
-            if (!line.isEmpty() && 
-            !isDateLine(line) && 
-            !isPriceLine(line) &&
-            !line.matches(".+\\$\\d+(\\.\\d{2})?")) { 
+             if (!isDateLine(line) &&
+                !isPriceLine(line) &&
+                !line.toLowerCase().contains("total") &&
+                !line.toLowerCase().contains("tax") &&
+                !line.matches(".*\\d+(\\.\\d{2})?.*")) {
                 return line;
             }
         }
@@ -308,6 +322,7 @@ public class ReceiptOcrController {
         // This handles formats like "TOTAL $XX.XX", "TOTAL: $XX.XX", etc.
         // The (?i) makes the pattern case-insensitive
         Pattern totalPattern = Pattern.compile("(?i)total\\s*[:$]?\\s*\\$?([0-9]+\\.[0-9]{2})");
+
         Matcher matcher = totalPattern.matcher(rawText);
 
         if (matcher.find()) {
@@ -347,9 +362,13 @@ public class ReceiptOcrController {
     private List<ReceiptItem> extractItems(String[] lines) {
         List<ReceiptItem> items = new ArrayList<>();
 
-        // Pattern to match an item description followed by a price
-        // This assumes items are formatted as "Description $XX.XX"
-        Pattern itemPattern = Pattern.compile("(.+)\\s+\\$?([0-9]+\\.[0-9]{2})");
+        
+        // Pattern 1: Qty + Item Name + Price
+        Pattern qtyPattern = Pattern.compile(QTY_NAME_PRICE);
+
+
+        // Pattern 2: Just Item Name + Price
+        Pattern namePricePattern = Pattern.compile(NAME_PRICE);
 
         // Skip the header and footer lines
         // Items are typically in the middle section of a receipt
@@ -363,18 +382,37 @@ public class ReceiptOcrController {
             line.trim();
             // Skip lines that are likely not items
             // This includes empty lines, subtotal/total lines, and date lines
-            if (line.isEmpty() || 
-                line.toLowerCase().contains("subtotal") ||
+            if (line.isEmpty()) continue;
+            if (line.toLowerCase().contains("subtotal") ||
                 line.toLowerCase().contains("total") || 
-                isDateLine(line)) {
+                line.toLowerCase().contains("tax") ||
+                isDateLine(line)){
                 continue;
             }
 
-            Matcher matcher = itemPattern.matcher(line);
+            
+            Matcher matcher = qtyPattern.matcher(line);
+            // qty & name & price
             if (matcher.find()) {
+                String itemName = matcher.group(2).trim();
+                try {
+                    double price = Double.parseDouble(matcher.group(3));
+                    if (!itemName.isEmpty() && price > 0 && price < 1000) {
+                        items.add(new ReceiptItem(itemName, price));
+                    }
+                    continue;
+                } catch (NumberFormatException e) {
+                    // Try fallback
+                }
+            }
+            
+            //Name & Price 
+            matcher = namePricePattern.matcher(line);
+            if (matcher.find()) {
+                String itemName = matcher.group(1).trim();
                 try {
                     // Extract the item name and price
-                    String itemName = matcher.group(1).trim();
+                    
                     double price = Double.parseDouble(matcher.group(2));
 
                     // Basic validation to filter out non-item entries

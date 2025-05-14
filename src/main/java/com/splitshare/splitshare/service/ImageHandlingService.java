@@ -21,8 +21,10 @@ public class ImageHandlingService {
         //Preprocess accordingly
         BufferedImage preprocessed;
         if (blurry) {
+            System.out.println("Image is blurry, using increased preprocessing.");
             preprocessed = Preprocesing.preprocessIncreased(imagePath);
         } else {
+            System.out.println("Image is not blurry, using minimal preprocessing.");
             preprocessed = Preprocesing.preprocessMinimal(imagePath);
         }
 
