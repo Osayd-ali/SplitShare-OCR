@@ -9,21 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.splitshare.splitshare.dto.ReceiptData;
-import com.splitshare.splitshare.dto.ReceiptItem;
 
 import javax.imageio.ImageIO;
 
-import java.awt.Image;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 /**
  * Controller for handling receipt OCR operations.
@@ -39,7 +36,7 @@ public class ReceiptOcrController {
     // Logger for tracking operations and debugging
     private static final Logger logger = LoggerFactory.getLogger(ReceiptOcrController.class);
     // The OCR engine used to extract text from images
-    private final OcrEngine ocrEngine;
+
     private final ReceiptStorageService storageService;
     private final ImageHandlingService imageHandlingService;
     private final ReceiptExtractionHelper extractor;
@@ -48,8 +45,8 @@ public class ReceiptOcrController {
      * Constructor that injects the OCR engine dependency
      */
     @Autowired
-    public ReceiptOcrController(OcrEngine ocrEngine, ReceiptStorageService storageService, ImageHandlingService imageHandlingService, ReceiptExtractionHelper extractor) {
-        this.ocrEngine = ocrEngine;
+    public ReceiptOcrController( ReceiptStorageService storageService, ImageHandlingService imageHandlingService, ReceiptExtractionHelper extractor) {
+
         this.storageService = storageService;
         this.imageHandlingService = imageHandlingService;
         this.extractor = extractor;
@@ -127,8 +124,9 @@ public class ReceiptOcrController {
         try {
             // Check if the uploaded file is actually an image by examining its MIME type
             // This prevents processing non-image files which would fail in OCR
-            if (!file.getContentType().startsWith("image/")) {
-                logger.warn("Invalid file type uploaded: {}", file.getContentType());
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                logger.warn("Invalid file type uploaded: {}", contentType);
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("Please upload a valid image file"));
             }
@@ -142,15 +140,15 @@ public class ReceiptOcrController {
                         .body(new ErrorResponse("Unable to process the uploaded image"));
             }
 
-            // Use the OCR engine to extract raw text from the image
-            // This calls the provided OcrEngine.extractTextFromImage() method
+
             File tempFile = File.createTempFile("receipt-", ".png");
             file.transferTo(tempFile);
+            //uses imageHandlingService to call ocrEngine and control how the image is processed
             String rawText = imageHandlingService.handleImage(tempFile.getAbsolutePath());
-            // System.out.println("OCR Text:\n" + rawText);
+
             tempFile.delete();
-            // String rawText = ocrEngine.extractTextFromImage(image);
-            // After extracting raw text, parse it into structured data
+
+
             // This includes store name, date, total, and individual items
             ReceiptData parsedData = extractor.parseReceiptText(rawText);
             // Store the extracted text and receipt data
