@@ -396,14 +396,13 @@ public class ReceiptOcrController {
             if (matcher.find()) {
                 String itemName = matcher.group(2).trim();
                 try {
+                    int quantity = Integer.parseInt(matcher.group(1));
                     double price = Double.parseDouble(matcher.group(3));
-                    if (!itemName.isEmpty() && price > 0 && price < 1000) {
-                        items.add(new ReceiptItem(itemName, price));
+                    if (!itemName.isEmpty() && price > 0 && price < 1000 && quantity > 0) {
+                        items.add(new ReceiptItem(itemName, price, quantity));
                     }
                     continue;
-                } catch (NumberFormatException e) {
-                    // Try fallback
-                }
+                } catch (NumberFormatException e) { /* fallback */ }
             }
             
             //Name & Price 
@@ -418,7 +417,7 @@ public class ReceiptOcrController {
                     // Basic validation to filter out non-item entries
                     // Items should have a non-empty name and reasonable price
                     if (!itemName.isEmpty() && price > 0 && price < 1000) {
-                        items.add(new ReceiptItem(itemName, price));
+                        items.add(new ReceiptItem(itemName, price, 1));
                     }
                 } catch (NumberFormatException e) {
                     // Skip this line if price parsing fails
@@ -514,16 +513,20 @@ public class ReceiptOcrController {
     public static class ReceiptItem {
         private String name;
         private double price;
+        private int quantity;
 
         /**
          * Constructor for creating a new receipt item
          *
          * @param name The item description
          * @param price The item price
+         * @param quantity The item quantity
+         * 
          */
-        public ReceiptItem(String name, double price) {
+        public ReceiptItem(String name, double price,int quantity) {
             this.name = name;
             this.price = price;
+            this.quantity = quantity;
         }
 
         // Getters and setters
@@ -542,6 +545,14 @@ public class ReceiptOcrController {
 
         public void setPrice(double price) {
             this.price = price;
+        }
+
+        public int getQuantity() { 
+            return quantity; 
+        }
+
+        public void setQuantity(int quantity) { 
+            this.quantity = quantity; 
         }
     }
 
