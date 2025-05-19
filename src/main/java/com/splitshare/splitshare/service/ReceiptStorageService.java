@@ -1,5 +1,7 @@
 package com.splitshare.splitshare.service;
 
+import com.splitshare.splitshare.dto.ReceiptData;
+import com.splitshare.splitshare.dto.ReceiptItem;
 import com.splitshare.splitshare.service.ReceiptOcrController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +44,7 @@ public class ReceiptStorageService {
      * @param originalFilename The original filename of the uploaded receipt image
      * @return The unique ID assigned to this receipt
      */
-    public String storeReceiptText(Long userId, String rawText, ReceiptOcrController.ReceiptData receiptData,
+    public String storeReceiptText(Long userId, String rawText, ReceiptData receiptData,
                                    String originalFilename) {
         String receiptId = UUID.randomUUID().toString();
         try {
@@ -72,7 +74,7 @@ public class ReceiptStorageService {
 
                 writer.write("Items:\n");
                 if (receiptData.getItems() != null) {
-                    for (ReceiptOcrController.ReceiptItem item : receiptData.getItems()) {
+                    for (ReceiptItem item : receiptData.getItems()) {
                         writer.write("- " + item.getName() + ": $" + String.format("%.2f", item.getPrice()) + "\n");
                     }
                 }
