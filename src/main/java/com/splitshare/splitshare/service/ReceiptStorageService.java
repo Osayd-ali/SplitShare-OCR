@@ -1,21 +1,17 @@
 package com.splitshare.splitshare.service;
 
-import com.splitshare.splitshare.service.ReceiptOcrController;
+import com.splitshare.splitshare.dto.ReceiptData;
+import com.splitshare.splitshare.dto.ReceiptItem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
+import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.stereotype.Service;
+
 import java.io.FileWriter;
-import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,7 +38,7 @@ public class ReceiptStorageService {
      * @param originalFilename The original filename of the uploaded receipt image
      * @return The unique ID assigned to this receipt
      */
-    public String storeReceiptText(Long userId, String rawText, ReceiptOcrController.ReceiptData receiptData,
+    public String storeReceiptText(Long userId, String rawText, ReceiptData receiptData,
                                    String originalFilename) {
         String receiptId = UUID.randomUUID().toString();
         try {
@@ -72,7 +68,7 @@ public class ReceiptStorageService {
 
                 writer.write("Items:\n");
                 if (receiptData.getItems() != null) {
-                    for (ReceiptOcrController.ReceiptItem item : receiptData.getItems()) {
+                    for (ReceiptItem item : receiptData.getItems()) {
                         writer.write("- " + item.getName() + ": $" + String.format("%.2f", item.getPrice()) + "\n");
                     }
                 }

@@ -7,7 +7,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -17,19 +19,20 @@ public class UploadController {private static final List<String> ALLOWED_TYPES =
 );
     private static final long MAX_SIZE = 5 * 1024 * 1024; // 5MB
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadReceipt(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadReceipt(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("No file selected.");
+            return ResponseEntity.badRequest().body(Map.of("error", "No file selected."));
         }
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
             return ResponseEntity
                     .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-                    .body("Unsupported file format. Please upload a valid image or PDF file.");
+                    .body(Map.of("error", "Unsupported file format. Please upload a valid image or PDF file."));
+
         }
         if (file.getSize() > MAX_SIZE) {
             return ResponseEntity
                     .status(HttpStatus.PAYLOAD_TOO_LARGE)
-                    .body("File too large. Please upload a file smaller than 5MB.");
+                    .body(Map.of("error", "File too large. Please upload a file smaller than 5MB."));
         }
         try {
             // Create storage directory if it doesn't exist
@@ -42,12 +45,19 @@ public class UploadController {private static final List<String> ALLOWED_TYPES =
             Path fullPath = storagePath.resolve(newFileName);
 
             // Save file
-            file.transferTo(fullPath.toFile());            return ResponseEntity.ok("Upload successful. File saved as: " + fullPath.toString());
+            file.transferTo(fullPath.toFile());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Upload successful");
+            response.put("fileName", newFileName);
+            response.put("filePath", fullPath.toString());
+
+            return ResponseEntity.ok(response);
 
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Upload failed due to a server error.");
+                    .body(Map.of("error", "Upload failed due to a server error."));
         }
     }
     private String getExtension(String fileName) {
