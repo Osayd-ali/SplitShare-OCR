@@ -1,4 +1,4 @@
-package com.splitshare.splitshare.service;
+package com.splitshare.splitshare.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.splitshare.splitshare.dto.ReceiptData;
+import com.splitshare.splitshare.service.ErrorResponse;
+import com.splitshare.splitshare.service.ImageHandlingService;
+import com.splitshare.splitshare.service.ReceiptExtractionHelper;
+import com.splitshare.splitshare.service.ReceiptStorageService;
 
 import javax.imageio.ImageIO;
 
