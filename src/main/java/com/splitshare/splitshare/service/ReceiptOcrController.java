@@ -96,6 +96,11 @@ public class ReceiptOcrController {
             response.put("date", parsedData.getDate());
             response.put("total", parsedData.getTotal());
             response.put("items", parsedData.getItems());
+            response.put("subtotal", parsedData.getSubtotal());
+            response.put("expectedSubtotal", parsedData.expectedSubTotal());
+            response.put("tax", parsedData.getTax());
+            response.put("tip", parsedData.getTip());
+
 
             return ResponseEntity.ok(response);
 
@@ -167,6 +172,13 @@ public class ReceiptOcrController {
             response.put("date", parsedData.getDate());
             response.put("total", parsedData.getTotal());
             response.put("items", parsedData.getItems());
+            //sub total
+            response.put("subtotal", parsedData.getSubtotal());
+            //expected sub total
+            response.put("expectedSubtotal", parsedData.expectedSubTotal());
+            response.put("tax", parsedData.getTax());
+            response.put("tip", parsedData.getTip());
+            
             // Return the structured data to the client with HTTP 200 OK status
             return ResponseEntity.ok(response);
 

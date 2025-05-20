@@ -33,3 +33,4 @@ build/
 .vscode/
 # Ignore uploaded receipts
 uploads/
+testCommands.txt

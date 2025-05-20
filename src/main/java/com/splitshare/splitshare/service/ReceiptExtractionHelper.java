@@ -50,8 +50,60 @@ public class ReceiptExtractionHelper {
         // Extract individual items purchased (the most complex part)
         receiptData.setItems(extractItems(lines));
 
+        receiptData.setSubtotal(extractSubtotal(rawText));
+        receiptData.setTax(extractTax(rawText));
+        receiptData.setTip(extractTip(rawText));
+
         return receiptData;
     }
+
+    private double extractSubtotal(String text) {
+        Pattern pattern = Pattern.compile("(?i)sub\\s*total[:\\s]*[€$]?([0-9]+\\.[0-9]{2})");
+        Matcher matcher = pattern.matcher(text);
+        
+        double subtotal = 0.0;
+        while (matcher.find()) {
+            try {
+                subtotal = Double.parseDouble(matcher.group(1));
+            } catch (NumberFormatException e) {
+                logger.warn("Could not parse subtotal from: {}", matcher.group(1));
+            }
+        }
+        return subtotal;
+    }
+
+    private double extractTax(String text) {
+        Pattern pattern = Pattern.compile("(?i)(sales\\s*)?tax[:\\s]*[€$]?([0-9]+\\.[0-9]{2})");
+        Matcher matcher = pattern.matcher(text);
+
+        double totalTax = 0.0;
+        while (matcher.find()) {
+            try {
+                totalTax += Double.parseDouble(matcher.group(2));
+            } catch (NumberFormatException e) {
+                logger.warn("Could not parse tax from: {}", matcher.group(2));
+            }
+        }
+        return totalTax;
+    }
+    
+    private double extractTip(String text) {
+        Pattern pattern = Pattern.compile("(?i)(tip|gratuity|t\\s*1\\s*p)[:\\s]*\\$?([0-9]+\\.[0-9]{2})");
+        return extractAmountFromText(pattern, text, 2);
+    }
+
+    private double extractAmountFromText(Pattern pattern, String text, int group) {
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            try {
+                return Double.parseDouble(matcher.group(group));
+            } catch (NumberFormatException e) {
+                logger.warn("Could not parse amount from: {}", matcher.group(group));
+            }
+        }
+        return 0.0;
+    }
+
 
     /**
      * Extracts the store name from the receipt text.
@@ -142,7 +194,7 @@ public class ReceiptExtractionHelper {
         // First strategy: Look for variations of "total" followed by a price
         // This handles formats like "TOTAL $XX.XX", "TOTAL: $XX.XX", etc.
         // The (?i) makes the pattern case-insensitive
-        Pattern totalPattern = Pattern.compile("(?i)total\\s*[:$]?\\s*\\$?([0-9]+\\.[0-9]{2})");
+        Pattern totalPattern = Pattern.compile("(?i)total\\s*[:€$]?\\s*\\$?([0-9]+\\.[0-9]{2})");
 
         Matcher matcher = totalPattern.matcher(rawText);
 
@@ -160,18 +212,15 @@ public class ReceiptExtractionHelper {
         Pattern pricePattern = Pattern.compile("\\$?([0-9]+\\.[0-9]{2})");
         matcher = pricePattern.matcher(rawText);
 
-        double largestAmount = 0.0;
+        double lastMatch = 0.0;
         while (matcher.find()) {
             try {
-                double amount = Double.parseDouble(matcher.group(1));
-                if (amount > largestAmount) {
-                    largestAmount = amount;
-                }
+                lastMatch = Double.parseDouble(matcher.group(1));
             } catch (NumberFormatException e) {
-                // Skip if not parseable
+                logger.warn("Failed to parse total amount: {}", matcher.group(1));
             }
         }
-        return largestAmount;
+        return lastMatch;
     }
     /**
      * Extracts individual purchased items from the receipt text.
@@ -204,12 +253,7 @@ public class ReceiptExtractionHelper {
             // Skip lines that are likely not items
             // This includes empty lines, subtotal/total lines, and date lines
             if (line.isEmpty()) continue;
-            if (line.toLowerCase().contains("subtotal") ||
-                line.toLowerCase().contains("total") || 
-                line.toLowerCase().contains("tax") ||
-                isDateLine(line)){
-                continue;
-            }
+            if (line.isEmpty() || isDateLine(line) || isNonItemLine(line)) continue;
 
             
             Matcher matcher = qtyPattern.matcher(line);
@@ -247,6 +291,11 @@ public class ReceiptExtractionHelper {
         }
 
         return items;
+    }
+    //helper method for extractItems
+    private boolean isNonItemLine(String line) {
+        String lower = line.toLowerCase();
+        return lower.matches(".*(sub\\s*total|tax|sales\\s*tax|sales[-\\s]*tax|tip|gratuity|total).*");
     }
 
     /**

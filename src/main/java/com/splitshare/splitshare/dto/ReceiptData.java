@@ -8,6 +8,11 @@ public class ReceiptData {
     private String storeName;
     private Date date;
     private double total;
+
+    private double subtotal;
+    private double tax;
+    private double tip;
+    
     private List<ReceiptItem> items;
 
     /**
@@ -49,5 +54,35 @@ public class ReceiptData {
 
     public void setItems(List<ReceiptItem> items) {
         this.items = items;
+    }
+
+    
+    public double getSubtotal() { 
+        return subtotal; 
+    }
+    public void setSubtotal(double subtotal) { 
+        this.subtotal = subtotal; 
+    }
+
+    public double getTax() { 
+        return tax; 
+    }
+    public void setTax(double tax) { 
+        this.tax = tax; 
+    }
+
+    public double getTip() { 
+        return tip; 
+    }
+    public void setTip(double tip) { 
+        this.tip = tip; 
+    }
+
+    public double expectedSubTotal() {
+        double subtotal = 0;
+        for (ReceiptItem item : items) {
+            subtotal += item.getPrice();
+        }
+        return subtotal;
     }
 }
