@@ -17,7 +17,7 @@ public class OcrEngine {
         
         //there is some weirdness with this in my example version mode 1 worked fine with everything else being the same
         //in this version mode 4 with the same images.
-        tesseract.setPageSegMode(4);
+        tesseract.setPageSegMode(6);
     }
 
     //This method does not do any pre processing just looks an image and gets the text.

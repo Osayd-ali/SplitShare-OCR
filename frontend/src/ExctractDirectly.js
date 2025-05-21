@@ -38,7 +38,11 @@ function ExtractDirectly() {
     <div>
       <h2>Extract Receipt Data</h2>
       <form onSubmit={handleSubmit}>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} accept="image/*" />
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files[0])}
+          accept="image/*"
+        />
         <br />
         <input
           type="text"
@@ -50,6 +54,26 @@ function ExtractDirectly() {
         <button type="submit">Extract</button>
       </form>
 
+      {/* Test Get Receipt Button - appears after successful extract */}
+      {response?.receiptId && (
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              const res = await axios.get(
+                `http://localhost:8080/api/receipts/${userId}/${response.receiptId}`
+              );
+              alert("Raw Receipt Text:\n" + res.data);
+            } catch (err) {
+              console.error(err);
+              setError("Failed to fetch receipt text.");
+            }
+          }}
+        >
+          Test Get Receipt
+        </button>
+      )}
+
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {response && (
@@ -60,6 +84,7 @@ function ExtractDirectly() {
       )}
     </div>
   );
+
 }
 
 export default ExtractDirectly;
