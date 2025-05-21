@@ -28,6 +28,10 @@ public class ReceiptItem {
         this.assignedUsers = new ArrayList<Integer>();
     }
 
+    public ReceiptItem() {
+        this.assignedUsers = new ArrayList<>();
+    }
+
     
 
     // Getters and setters

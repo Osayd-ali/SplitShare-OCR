@@ -19,11 +19,11 @@ import com.splitshare.splitshare.dto.ReceiptItem;
 @Service
 public class ReceiptExtractionHelper {
     private static final Logger logger = LoggerFactory.getLogger(ReceiptExtractionHelper.class);
-        // Pattern 1: Qty + Item Name + Price
-    private final static String QTY_NAME_PRICE = "(?i)(\\d+)\\s+([A-Za-z &]+?)\\s+\\$?([0-9]{1,3}\\.\\d{2})\\b";
+    // Pattern 1: Qty + Item Name + Price
+    private final static String QTY_NAME_PRICE = "(?i)(\\d+)\\s+([A-Za-z &]+?)\\s+\\$?((?:\\d+)?\\.\\d{2}|\\d{1,4})\\b";
 
     // Pattern 2: Just Item Name + Price
-    private final static String NAME_PRICE = "(?i)([A-Za-z &]+?)\\s+\\$?([0-9]{1,3}\\.\\d{2})\\b";
+    private final static String NAME_PRICE = "(?i)([A-Za-z &]+?)\\s+\\$?((?:\\d+)?\\.\\d{2}|\\d{1,4})\\b";
     /**
      * Main method for parsing raw OCR text into structured receipt data.
      * Coordinates the extraction of different receipt components.
@@ -260,42 +260,54 @@ public class ReceiptExtractionHelper {
             // qty & name & price
             if (matcher.find()) {
                 String itemName = matcher.group(2).trim();
+                Double price = safeParsePrice(matcher.group(3));
                 try {
                     int quantity = Integer.parseInt(matcher.group(1));
-                    double price = Double.parseDouble(matcher.group(3));
-                    if (!itemName.isEmpty() && price > 0 && price < 1000 && quantity > 0) {
+                    if (price != null && !itemName.isEmpty() && price > 0 && price < 1000 && quantity > 0) {
                         items.add(new ReceiptItem(itemName, price, quantity));
+                        continue;
                     }
-                    continue;
-                } catch (NumberFormatException e) { /* fallback */ }
+                } catch (NumberFormatException e) {
+                    logger.warn("Failed to parse quantity: {}", matcher.group(1));
+                }
             }
             
             //Name & Price 
             matcher = namePricePattern.matcher(line);
             if (matcher.find()) {
                 String itemName = matcher.group(1).trim();
-                try {
-                    // Extract the item name and price
-                    
-                    double price = Double.parseDouble(matcher.group(2));
-
-                    // Basic validation to filter out non-item entries
-                    // Items should have a non-empty name and reasonable price
-                    if (!itemName.isEmpty() && price > 0 && price < 1000) {
-                        items.add(new ReceiptItem(itemName, price, 1));
-                    }
-                } catch (NumberFormatException e) {
-                    // Skip this line if price parsing fails
+                Double price = safeParsePrice(matcher.group(2));
+                // Basic validation to filter out non-item entries
+                // Items should have a non-empty name and reasonable price
+                if (price != null && !itemName.isEmpty() && price > 0 && price < 1000) {
+                    items.add(new ReceiptItem(itemName, price, 1));
                 }
             }
         }
 
         return items;
     }
+
+    private Double safeParsePrice(String raw) {
+        try {
+            raw = raw.trim();
+            if (!raw.contains(".") && raw.length() >= 3) {
+                // Assume last 2 digits are cents
+                int rawInt = Integer.parseInt(raw);
+                return rawInt / 100.0;
+            } else if (raw.contains(".")) {
+                return Double.parseDouble(raw);
+            }
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse price: {}", raw);
+        }
+        return null;
+    }
+
     //helper method for extractItems
     private boolean isNonItemLine(String line) {
         String lower = line.toLowerCase();
-        return lower.matches(".*(sub\\s*total|tax|sales\\s*tax|sales[-\\s]*tax|tip|gratuity|total).*");
+        return lower.matches(".*(sub\\s*total|total|tax|sales[-\\s]*tax|tip|gratuity|authorization|payment|card reader|visa|mastercard|transaction|order|host).*");
     }
 
     /**

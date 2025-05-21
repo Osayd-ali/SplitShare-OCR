@@ -124,6 +124,8 @@ public class ReceiptOcrController {
                             "Please ensure the image is clear and try again, or enter the details manually."));
         }
     }
+
+
     
     //this is the rest api for if use uploads file from their device
     @PostMapping("/extract")
@@ -218,6 +220,19 @@ public class ReceiptOcrController {
 
         return ResponseEntity.ok(receiptText);
     }
-    
 
+    @GetMapping("/receipt-data")
+    public ResponseEntity<?> getReceiptData(
+            @RequestParam Long userId,
+            @RequestParam String receiptId) {
+
+        ReceiptData receiptData = storageService.getReceiptById(userId, receiptId);
+
+        if (receiptData == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        
+        return ResponseEntity.ok(receiptData);
+    }
+    
 }
