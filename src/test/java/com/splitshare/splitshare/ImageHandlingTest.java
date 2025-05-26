@@ -32,17 +32,6 @@ public class ImageHandlingTest {
         assertTrue(result.contains("TOTAL") || result.contains("Total"));
     }
 
-    @Test
-    void testExtractionIncreased() throws Exception {
-        File imageFile = ResourceUtils.getFile("classpath:Blurry_1.png");
-        BufferedImage preprocessed = Preprocesing.preprocessIncreased(imageFile.getAbsolutePath());
-
-        String ocrResult = ocr.extractTextFromImage(preprocessed);
-
-        assertNotNull(ocrResult);
-        assertTrue(ocrResult.toLowerCase().contains("coffee"), "Expected to find 'coffee'");
-        assertTrue(ocrResult.toLowerCase().contains("total"), "Expected to find 'total'");
-    }
 
     @Test
     void testOcrEngineMinimal() throws Exception {

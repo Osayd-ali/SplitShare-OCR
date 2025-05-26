@@ -1,21 +1,18 @@
 package com.splitshare.splitshare.service;
 
-import com.splitshare.splitshare.service.ReceiptOcrController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.splitshare.splitshare.dto.ReceiptData;
+import com.splitshare.splitshare.dto.ReceiptItem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
+import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.stereotype.Service;
+
 import java.io.FileWriter;
-import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,8 +39,7 @@ public class ReceiptStorageService {
      * @param originalFilename The original filename of the uploaded receipt image
      * @return The unique ID assigned to this receipt
      */
-    public String storeReceiptText(Long userId, String rawText, ReceiptOcrController.ReceiptData receiptData,
-                                   String originalFilename) {
+    public String storeReceiptText(Long userId, String rawText, ReceiptData receiptData, String originalFilename) {
         String receiptId = UUID.randomUUID().toString();
         try {
             // Create user directory if it doesn't exist
@@ -72,7 +68,7 @@ public class ReceiptStorageService {
 
                 writer.write("Items:\n");
                 if (receiptData.getItems() != null) {
-                    for (ReceiptOcrController.ReceiptItem item : receiptData.getItems()) {
+                    for (ReceiptItem item : receiptData.getItems()) {
                         writer.write("- " + item.getName() + ": $" + String.format("%.2f", item.getPrice()) + "\n");
                     }
                 }
@@ -80,6 +76,10 @@ public class ReceiptStorageService {
                 writer.write("\n---- RAW OCR TEXT ----\n\n");
                 writer.write(rawText);
             }
+
+            ObjectMapper mapper = new ObjectMapper();
+            Path jsonFile = userDir.resolve(receiptId + ".json");
+            mapper.writeValue(jsonFile.toFile(), receiptData);
 
             logger.info("Successfully stored receipt text for user {} with ID {}", userId, receiptId);
             return receiptId;
@@ -140,4 +140,44 @@ public class ReceiptStorageService {
             return null;
         }
     }
+
+    
+    public ReceiptData getReceiptById(Long userId, String receiptId) {
+        try {
+            Path receiptJsonFile = Paths.get(storageBasePath, userId.toString(), receiptId + ".json");
+
+            if (!Files.exists(receiptJsonFile)) {
+                logger.warn("JSON receipt file not found for user {} with ID {}", userId, receiptId);
+                return null;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(receiptJsonFile.toFile(), ReceiptData.class);
+
+        } catch (Exception e) {
+            logger.error("Failed to load structured receipt for user {} with ID {}", userId, receiptId, e);
+            return null;
+        }
+    }
+    
+    public void updateReceipt(Long userId, String receiptId, ReceiptData updatedReceiptData) {
+        try {
+            Path userDir = Paths.get(storageBasePath, userId.toString());
+            if (!Files.exists(userDir)) {
+                Files.createDirectories(userDir);
+            }
+
+            Path receiptJsonFile = userDir.resolve(receiptId + ".json");
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(receiptJsonFile.toFile(), updatedReceiptData);
+
+            logger.info("Updated structured receipt for user {} with ID {}", userId, receiptId);
+        } catch (Exception e) {
+            logger.error("Failed to update structured receipt for user {} with ID {}", userId, receiptId, e);
+            throw new RuntimeException("Failed to update receipt data", e);
+        }
+    }
+
+
 }
