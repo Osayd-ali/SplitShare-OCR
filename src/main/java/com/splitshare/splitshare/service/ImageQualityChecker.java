@@ -15,7 +15,7 @@ public class ImageQualityChecker {
             throw new IllegalArgumentException("Could not load image: " + imagePath);
         }
 
-        //edge detectioon
+        //edge detection
         Mat laplacian = new Mat();
         opencv_imgproc.Laplacian(image, laplacian, opencv_core.CV_64F);
 
